@@ -1,16 +1,15 @@
 #!/bin/sh
 #
-# Pre-Commit hook script for Drupal 8.x to check your code against ESLint and PHPCS code sniffer.
+# Pre-Commit hook script check your code against ESLint and PHPCS with PSR2 code sniffer.
 #
 # Requirements:
-#   Drupal 8.x
 #   NodeJS
 #   ESLint
-#   PHP Code Sniffer (phpcs) with Drupal Coder (https://www.drupal.org/project/coder)
+#   PHP Code Sniffer (phpcs)
 #
 # Usage:
 #   In your terminal: $ cd /path/to/your/project/.git/hooks
-#   Download the pre-commit script: $ curl -O https://raw.githubusercontent.com/mecmartini/drupal-pre-commit-hook/master/pre-commit
+#   Download the pre-commit script: $ curl -O https://raw.githubusercontent.com/kwen8/eslint-psr2-pre-commit-hook/master/pre-commit
 #   Make sure script is executable : $ chmod +x pre-commit
 #   Esit the script with your favorite editor and setup the bin tools on the #Setup section
 #   Ready to commit!
@@ -19,7 +18,7 @@
 # Setup
 commitfailed=0
 NODE_BIN="/usr/local/bin/node"
-ESLINT_BIN="./web/node_modules/.bin/eslint"
+ESLINT_BIN="./node_modules/.bin/eslint"
 PHPCS_BIN="./vendor/bin/phpcs"
 PHPCBF_BIN="./vendor/bin/phpcbf"
 
@@ -58,28 +57,28 @@ fi
 
 #### Code Sniffer
 
-drupalfiles=$(git diff --cached --name-only  --diff-filter=ACM HEAD | grep -E '\.php$|\.module$|\.inc$|\.install$|\.test$|\.profile$|\.theme$|\.css$|\.info$|\.txt$|\.md$|\.yml$')
+phpfiles=$(git diff --cached --name-only  --diff-filter=ACM HEAD | grep -E '\.php$|\.module$|\.inc$|\.install$|\.test$|\.profile$|\.theme$|\.css$|\.info$|\.txt$|\.md$|\.yml$')
 
-if [ "$drupalfiles" != "" ]
+if [ "$phpfiles" != "" ]
 then
-    drupalfailed=0
+    phpcsfailed=0
     echo "Running Code Sniffer..."
-    $PHPCS_BIN --standard=Drupal --encoding=utf-8 -n -p $drupalfiles >/dev/null
+    $PHPCS_BIN --standard=PSR2 --encoding=utf-8 -n -p $phpfiles >/dev/null
     if [ $? != 0 ]
     then
-        $PHPCBF_BIN --standard=Drupal --encoding=utf-8 -n -p $drupalfiles >/dev/null
-        git add $drupalfiles
-        $PHPCS_BIN --standard=Drupal --encoding=utf-8 -n -p $drupalfiles >/dev/null
+        $PHPCBF_BIN --standard=PSR2 --encoding=utf-8 -n -p $phpfiles >/dev/null
+        git add $phpfiles
+        $PHPCS_BIN --standard=PSR2 --encoding=utf-8 -n -p $phpfiles >/dev/null
         if [ $? != 0 ]
         then
-            drupalfailed=1
+            phpcsfailed=1
         fi
     fi
 
-    if [ $drupalfailed != 0 ]
+    if [ $phpcsfailed != 0 ]
     then
         echo "PHPCS failed, errors found not fixable automatically, git commit denied!"
-        commitfailed=$drupalfailed
+        commitfailed=$phpcsfailed
     fi
 fi
 
